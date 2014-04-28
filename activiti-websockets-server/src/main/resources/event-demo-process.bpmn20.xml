@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<definitions xmlns="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:activiti="http://activiti.org/bpmn" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:omgdc="http://www.omg.org/spec/DD/20100524/DC" xmlns:omgdi="http://www.omg.org/spec/DD/20100524/DI" typeLanguage="http://www.w3.org/2001/XMLSchema" expressionLanguage="http://www.w3.org/1999/XPath" targetNamespace="http://www.activiti.org/processdef">
+  <process id="event-demo-process" name="event-demo-process" isExecutable="true">
+    <startEvent id="start-event" name="start-event"></startEvent>
+    <endEvent id="end-event" name="end-event"></endEvent>
+    <scriptTask id="first-task" name="first-task" scriptFormat="JavaScript" activiti:autoStoreVariables="false">
+      <script>print("Doing first task...");</script>
+    </scriptTask>
+    <scriptTask id="second-task" name="second-task" scriptFormat="JavaScript" activiti:autoStoreVariables="false">
+      <script>print("Everything has its time...");</script>
+    </scriptTask>
+    <intermediateCatchEvent id="timer-catch" name="timer-catch">
+      <timerEventDefinition>
+        <timeCycle>R1/PT8S</timeCycle>
+      </timerEventDefinition>
+    </intermediateCatchEvent>
+    <sequenceFlow id="sid-53F4A962-0A92-47D5-98CA-54A05D6B2660" sourceRef="start-event" targetRef="first-task"></sequenceFlow>
+    <sequenceFlow id="sid-90D4AC65-2938-429C-935E-052A33743C19" sourceRef="first-task" targetRef="timer-catch"></sequenceFlow>
+    <sequenceFlow id="sid-3E2BFA37-6945-4065-930D-FD39935147DA" sourceRef="timer-catch" targetRef="second-task"></sequenceFlow>
+    <userTask id="user-task" name="user-task"></userTask>
+    <sequenceFlow id="sid-DF1F5F1D-108A-4735-BE6A-B11923A4352E" sourceRef="second-task" targetRef="user-task"></sequenceFlow>
+    <sequenceFlow id="sid-D228C78D-FA8E-4BC5-942F-7546698DDE3F" sourceRef="user-task" targetRef="end-event"></sequenceFlow>
+  </process>
+  <bpmndi:BPMNDiagram id="BPMNDiagram_event-demo-process">
+    <bpmndi:BPMNPlane bpmnElement="event-demo-process" id="BPMNPlane_event-demo-process">
+      <bpmndi:BPMNShape bpmnElement="start-event" id="BPMNShape_start-event">
+        <omgdc:Bounds height="30.0" width="30.0" x="255.0" y="244.0"></omgdc:Bounds>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape bpmnElement="end-event" id="BPMNShape_end-event">
+        <omgdc:Bounds height="28.0" width="28.0" x="1095.0" y="245.0"></omgdc:Bounds>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape bpmnElement="first-task" id="BPMNShape_first-task">
+        <omgdc:Bounds height="80.0" width="100.0" x="405.0" y="219.0"></omgdc:Bounds>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape bpmnElement="second-task" id="BPMNShape_second-task">
+        <omgdc:Bounds height="80.0" width="100.0" x="690.0" y="219.0"></omgdc:Bounds>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape bpmnElement="timer-catch" id="BPMNShape_timer-catch">
+        <omgdc:Bounds height="30.0" width="30.0" x="570.0" y="244.0"></omgdc:Bounds>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape bpmnElement="user-task" id="BPMNShape_user-task">
+        <omgdc:Bounds height="80.0" width="100.0" x="885.0" y="219.0"></omgdc:Bounds>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge bpmnElement="sid-3E2BFA37-6945-4065-930D-FD39935147DA" id="BPMNEdge_sid-3E2BFA37-6945-4065-930D-FD39935147DA">
+        <omgdi:waypoint x="600.0" y="259.0"></omgdi:waypoint>
+        <omgdi:waypoint x="690.0" y="259.0"></omgdi:waypoint>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge bpmnElement="sid-DF1F5F1D-108A-4735-BE6A-B11923A4352E" id="BPMNEdge_sid-DF1F5F1D-108A-4735-BE6A-B11923A4352E">
+        <omgdi:waypoint x="790.0" y="259.0"></omgdi:waypoint>
+        <omgdi:waypoint x="885.0" y="259.0"></omgdi:waypoint>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge bpmnElement="sid-53F4A962-0A92-47D5-98CA-54A05D6B2660" id="BPMNEdge_sid-53F4A962-0A92-47D5-98CA-54A05D6B2660">
+        <omgdi:waypoint x="285.0" y="259.0"></omgdi:waypoint>
+        <omgdi:waypoint x="405.0" y="259.0"></omgdi:waypoint>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge bpmnElement="sid-90D4AC65-2938-429C-935E-052A33743C19" id="BPMNEdge_sid-90D4AC65-2938-429C-935E-052A33743C19">
+        <omgdi:waypoint x="505.0" y="259.0"></omgdi:waypoint>
+        <omgdi:waypoint x="570.0" y="259.0"></omgdi:waypoint>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge bpmnElement="sid-D228C78D-FA8E-4BC5-942F-7546698DDE3F" id="BPMNEdge_sid-D228C78D-FA8E-4BC5-942F-7546698DDE3F">
+        <omgdi:waypoint x="985.0" y="259.0"></omgdi:waypoint>
+        <omgdi:waypoint x="1095.0" y="259.0"></omgdi:waypoint>
+      </bpmndi:BPMNEdge>
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+</definitions>
