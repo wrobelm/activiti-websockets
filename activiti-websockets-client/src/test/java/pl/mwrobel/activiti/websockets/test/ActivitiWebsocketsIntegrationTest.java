@@ -1,19 +1,12 @@
 package pl.mwrobel.activiti.websockets.test;
 
+import static com.jayway.restassured.RestAssured.given;
+import com.jayway.restassured.http.ContentType;
 import java.io.IOException;
-import static java.lang.Thread.sleep;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
-import javax.ws.rs.NotFoundException;
-import javax.ws.rs.client.Client;
-import javax.ws.rs.client.ClientBuilder;
-import javax.ws.rs.client.Entity;
-import javax.ws.rs.client.Invocation;
-import javax.ws.rs.client.WebTarget;
-import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.Response;
 import org.codehaus.jackson.map.ObjectMapper;
 import org.codehaus.jackson.type.TypeReference;
 import org.junit.After;
@@ -27,20 +20,18 @@ import pl.mwrobel.activiti.websockets.test.utils.ProcessEventsWebSocketConnector
  *
  * @author michalw
  */
-public class ActivitiWebsocketsIntegrationTest {
-
-    private final Client client;
+public class ActivitiWebsocketsIntegrationTest {    
 
     private static final String host = "127.0.0.1";
     private static final String port = "9080";
-    private static final String activitiServiceURL = "http://" + host + ":" + port + "/service/";
-    private static final String authHeader = "Basic a2VybWl0Omtlcm1pdA==";
+    private static final String activitiServiceURL = "http://" + host + ":" + port + "/service/";    
+    private static final String USERNAME = "kermit";
+    private static final String PASSWORD = "kermit";    
+    private static final int HTTP_STATUS_CREATED = 201;
+    private static final int HTTP_STATUS_SUCCESSFUL = 200;
+    private static final int HTTP_STATUS_NOT_FOUND = 404;
 
-    private ProcessEventsWebSocketConnector con;
-
-    public ActivitiWebsocketsIntegrationTest() {
-        client = ClientBuilder.newClient();
-    }
+    private ProcessEventsWebSocketConnector con;    
 
     @Before
     public void setUp() throws Exception {
@@ -76,8 +67,16 @@ public class ActivitiWebsocketsIntegrationTest {
                 + "   \"processDefinitionKey\":\"event-demo-process\",\n"
                 + "   \"businessKey\":\"" + businessKey + "\"  \n"
                 + "}";
-        String method = "POST";
-        Response response = clientHTTPRequest(url, method, payload, authHeader);
+        String response = 
+        given()
+                .contentType(ContentType.JSON)
+                .auth().basic(USERNAME, PASSWORD)                
+                .body(payload)
+        .when()
+                .post(url)
+        .then()
+                .assertThat().statusCode(HTTP_STATUS_CREATED)
+        .extract().asString();
         HashMap<String, Object> serverResponse = from(response);
         String processInstanceId = (String) serverResponse.get("id");
         return processInstanceId;
@@ -86,9 +85,15 @@ public class ActivitiWebsocketsIntegrationTest {
     
     private String getUserTaskId(String processInstanceId) {
         String url = activitiServiceURL + "runtime/tasks?processInstanceId=" + processInstanceId;
-        String payload = null;
-        String method = "GET";
-        Response response = clientHTTPRequest(url, method, payload, authHeader);
+        String response = 
+        given()
+                .contentType(ContentType.JSON)
+                .auth().basic(USERNAME, PASSWORD)                
+        .when()
+                .get(url)
+        .then()
+                .assertThat().statusCode(HTTP_STATUS_SUCCESSFUL)
+        .extract().asString();
         HashMap<String, Object> serverResponse = from(response);
         Map<String, Object> task = ((List<Map<String,Object>>)serverResponse.get("data")).get(0);
         String taskId = (String)task.get("id");        
@@ -98,8 +103,14 @@ public class ActivitiWebsocketsIntegrationTest {
     private void completeUserTaskByTaskId(String taskId) {
         String url = activitiServiceURL + "runtime/tasks/" + taskId;
         String payload ="{\"action\" : \"complete\"}";
-        String method = "POST";
-        clientHTTPRequest(url, method, payload, authHeader);        
+        given()
+                .contentType(ContentType.JSON)
+                .auth().basic(USERNAME, PASSWORD)
+                .body(payload)
+        .when()
+                .post(url)
+        .then()
+                .assertThat().statusCode(HTTP_STATUS_SUCCESSFUL);        
     }
     
     private void completeUserTask(String processInstanceId) {
@@ -108,47 +119,23 @@ public class ActivitiWebsocketsIntegrationTest {
 
     private void checkIfProcessHasFinished(String processInstanceId) {
         String url = activitiServiceURL + "runtime/process-instances/" + processInstanceId;
-        String payload = null;
-        String method = "GET";
-        try {
-            clientHTTPRequest(url, method, payload, authHeader);
-        } catch (NotFoundException e) {
-            // this exception should be thrown if process is finished
-            return;
-        }
-        throw new RuntimeException("process " + processInstanceId + " still exists");
+        given()
+                .contentType(ContentType.JSON)
+                .auth().basic(USERNAME, PASSWORD)                
+        .when()
+                .get(url)
+        .then()
+                .assertThat().statusCode(HTTP_STATUS_NOT_FOUND);
     }
-
-    private Response clientHTTPRequest(String url, String method, String payload, String authHeader) {
-        WebTarget webTarget = client.target(url);
-        String input = payload;
-
-        Invocation.Builder invocationBuilder
-                = webTarget.request(MediaType.APPLICATION_JSON_TYPE);
-        invocationBuilder.header("Authorization", authHeader);
-
-        Response response = invocationBuilder.method(method, Entity.json(input), Response.class);
-
-        if (response.getStatusInfo().getFamily() != Response.Status.Family.SUCCESSFUL) {
-            if (response.getStatus() == 404) {
-                throw new NotFoundException("Failed : HTTP error code : "
-                        + response.getStatus() + " message:" + response.readEntity(String.class));
-            }
-            throw new RuntimeException("Failed : HTTP error code : "
-                    + response.getStatus() + " message:" + response.readEntity(String.class));
-        }
-        return response;
-    }
-
-    private HashMap<String, Object> from(Response JSONResponse) {
-        String serverOutput = JSONResponse.readEntity(String.class);
+    
+    private HashMap<String, Object> from(String JSONString) {        
         ObjectMapper mapper = new ObjectMapper();
         TypeReference<HashMap<String, Object>> typeRef
                 = new TypeReference< 
                  HashMap<String, Object>>() {
                 };
         try {
-            return mapper.readValue(serverOutput, typeRef);
+            return mapper.readValue(JSONString, typeRef);
         } catch (IOException ex) {
             throw new RuntimeException(ex);
         }
